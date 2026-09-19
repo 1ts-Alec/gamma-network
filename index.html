@@ -1,70 +1,18 @@
-<!doctype html>
-<!--
-====================================================================
- GAMES — single-file game directory. Everything (CSS + JS) is inline.
- Deploy = copy this ONE file to your host root. No build, no deps.
-
- PORTABILITY — every URL the page touches comes from ONE place:
- the config object below. Folders can move anywhere (another path,
- another host, behind a CDN) and you only ever edit these strings.
-
-   Option A (recommended when this file is hosted alone):
-     Host `config.js` anywhere (GitHub repo -> jsdelivr, Netlify, ...)
-     containing exactly one line, e.g.:
-
-       window.SITE_CONFIG = {
-         zonesUrl:   "https://cdn.jsdelivr.net/gh/1ts-Alec/assets@main/zones.json",
-         htmlBase:   "https://cdn.jsdelivr.net/gh/1ts-Alec/html@main",
-         coversBase: "https://cdn.jsdelivr.net/gh/1ts-Alec/covers@main",
-         title:      "Games"
-       };
-
-     ...then point CONFIG_URL (just below the defaults) at it.
-     zones.json expects {HTML_URL}/{COVER_URL} placeholders inside its
-     entries — this app substitutes them with htmlBase/coversBase,
-     the exact convention the dataset already uses.
-
-   Option B: forget the remote file and just edit SITE_DEFAULTS below.
-
- Notes:
-  - jsdelivr serves GitHub raw content with CORS headers, so fetch()
-    + <script src> both work cross-origin. It does NOT serve user
-    `gn-math` (blocked) — host the folders under your own account.
-    HTML files are served as text/plain (jsdelivr security policy), so
-    the player fetch()es them and loads a text/html blob in the iframe.
-  - Default coversBase (raw.githubusercontent gn-math/covers) is a
-    verified-working mirror of all 836 covers; replace with your own
-    fork whenever you want (one line). Covers are 1:1 PNGs, <id>.png.
-  - Game pages themselves are self-contained: each HTML file in the
-    `html` folder carries its own <base href=...> so they pull their
-    real assets from their own CDN paths regardless of where the
-    catalog index lives. Clicks open those pages in an in-site player
-    (iframe overlay); ctrl/cmd-click still opens the CDN URL directly.
-    Maximize (inside Google Sites / an iframe) closes the overlay and
-    opens a new about:blank window, then document.write()s the fetched
-    game HTML into it — no iframe, no blob: URL.
-  - Serving this file locally for testing: run
-    `python3 -m http.server 8000` in the folder that contains BOTH
-    the `html` and `assets` folders, open http://127.0.0.1:8000/,
-    and leave zonesUrl/htmlBase as the relative defaults. (file://
-    won't work because browsers block fetch() there.)
-====================================================================
--->
-<html lang="en">
+<!doctype html><html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>Games</title>
+<title>Gamme</title>
 <style>
 :root{
-  --bg:#0c0e12; --bg2:#12151c;
-  --card:#151923; --card2:#191e2a;
-  --line:#232a3a; --line2:#2e3650;
+  --bg:#000; --bg2:#000;
+  --card:#151923; --card2:#362d40;
+  --line:#000; --line2:#000; --searchLine:#513f65;
   --text:#e8ebf3; --muted:#8f97ab;
-  --acc:#5b8cff;
+  --acc:#000;
   --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  --space:16px;  /* the ONE spacing unit: page gutters, card gaps, grid edges */
+  --space:16px;
   --gold:#ffcf5c;
 }
 html,body{height:100%}
@@ -75,14 +23,14 @@ body{display:flex;flex-direction:column;overflow:hidden}
 
 /* ---------- header ---------- */
 header{flex:0 0 auto;display:flex;align-items:center;gap:var(--space);padding:12px var(--space);
-  border-bottom:1px solid var(--line);background:rgba(12,14,18,.94)}
+  border-bottom:1px solid var(--line);background:rgba(0,0,0,1)}
 .wordmark{font-size:20px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
 .wordmark b{color:var(--acc)}
 .head-r{flex:1;display:flex;justify-content:center;min-width:0}
 .searchw{position:relative;width:min(540px,100%)}
 .searchw svg{position:absolute;left:13px;top:50%;translate:0 -50%;opacity:.45;pointer-events:none}
 input#q{width:100%;padding:11px 64px 11px 38px;border-radius:12px;font-size:14.5px;
-  border:1px solid var(--line);background:var(--bg2);color:var(--text);outline:none;
+  border:1px solid var(--searchLine);background:var(--bg2);color:var(--text);outline:none;
   transition:border-color .15s, box-shadow .15s}
 input#q::placeholder{color:var(--muted)}
 input#q:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(91,140,255,.16)}
@@ -129,14 +77,11 @@ input#q:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(91,140,255,.16)}
   flex-direction:column;gap:12px;color:var(--muted);font-size:14px;padding:0 22px;text-align:center}
 #status code{color:var(--acc);font-size:12px;background:var(--bg2);border:1px solid var(--line);
   padding:2px 8px;border-radius:7px}
-.spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--line2);
+.spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--searchLine);
   border-top-color:var(--acc);animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .err{color:#f0a0a8;font-size:14px;max-width:560px;line-height:1.55}
 .err code{font-size:12px}
-
-footer{flex:0 0 auto;padding:10px 0 12px;text-align:center;font-size:11.5px;color:var(--muted);opacity:.75;
-  border-top:1px solid var(--line)}
 
 /* ---------- in-site player ---------- */
 #player{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
@@ -180,28 +125,25 @@ footer{flex:0 0 auto;padding:10px 0 12px;text-align:center;font-size:11.5px;colo
 </style>
 
 <script>
-/* ---- defaults (edit here for Option B; remote config.js overrides these) ---- */
+ 
 window.SITE_DEFAULTS = {
-  zonesUrl:   "https://cdn.jsdelivr.net/gh/1ts-Alec/assets@main/zones.json",                                   // catalog JSON (zones format with {HTML_URL}/{COVER_URL} placeholders)
-  htmlBase:   "https://cdn.jsdelivr.net/gh/1ts-Alec/html@main",                                                // substitutes {HTML_URL}
-  coversBase: "https://cdn.jsdelivr.net/gh/1ts-Alec/covers@main",  // substitutes {COVER_URL}
-  title:      "Games"
+  zonesUrl:   "https://cdn.jsdelivr.net/gh/1ts-Alec/assets@main/zones.json",
+  htmlBase:   "https://cdn.jsdelivr.net/gh/1ts-Alec/html@main",
+  title:      "G@M3S"
 };
 </script>
-<!-- Option A: point this at your hosted config.js (one line: window.SITE_CONFIG = {...}).
-     If it 404s/blocks, nothing breaks — SITE_DEFAULTS above are the fallback. -->
 <script src="https://cdn.jsdelivr.net/gh/1ts-Alec/site-config@main/config.js" onerror="window.__configFailed=true"></script>
 </head>
 <body>
 
-<noscript><div style="padding:40px;font-family:sans-serif">This catalog needs JavaScript (all games are plain HTML pages served separately, and work fine without JS; enable it to browse the list).</div></noscript>
+<noscript><div style="padding:40px;font-family:sans-serif">How th you even use the interweb w no js dawg xDDD</div></noscript>
 
 <header>
-  <div class="wordmark"><span class="long" id="wordmark">Games</span></div>
+  <div class="wordmark"><span class="long" id="wordmark">G@M3S</span></div>
   <div class="head-r">
     <div class="searchw">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa3b5" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" type="search" placeholder="Search games…" autocomplete="off" spellcheck="false" enterkeyhint="search" autofocus>
+      <input id="q" type="search" placeholder="Search…" autocomplete="off" spellcheck="false" enterkeyhint="search" autofocus>
       <span class="kbd-hint">/</span>
     </div>
   </div>
@@ -223,8 +165,6 @@ window.SITE_DEFAULTS = {
     </div>
   </div>
 </main>
-
-<footer id="foot"></footer>
 
 <div id="player" role="dialog" aria-modal="true" aria-label="Game player" hidden>
   <div class="player-stage" id="playerStage">
@@ -281,18 +221,14 @@ seg.addEventListener('click', e => {
   for (const x of seg.children) x.classList.toggle('on', x === b);
   applySearch();
 });
-
-/* ============================ virtualization ============================ */
-/* One reusable row pool; rows absolutely positioned by translate3d.
-   Only visible rows (±2 overscan) touch the DOM on scroll. */
-const ITEM_H = 56;                    // name + author block under the square art
-let GAP = 16;                          // read from --space in measure()
+const ITEM_H = 56;
+let GAP = 16;
 const MIN_CARD = 150, OVERSCAN = 2;
 let cols = 0, rowH = 0, colW = 0, padTop = 0;
-let ALL = [];                          // full sorted catalog
-let VIEW = [];                         // currently filtered list
+let ALL = [];
+let VIEW = [];
 const pool = [];
-let paintedSt = -1, paintedEn = -1;    // which row indexes are currently painted
+let paintedSt = -1, paintedEn = -1;
 let needRows = 0;
 
 function measure(){
@@ -303,7 +239,7 @@ function measure(){
   const avail = grid.clientWidth - padL * 2;
   const c = Math.max(1, Math.floor((avail + GAP) / (MIN_CARD + GAP)));
   cols = c;
-  colW = (avail - (c - 1) * GAP) / c;   // fractional width: right gutter == left exactly
+  colW = (avail - (c - 1) * GAP) / c;
   rowH = colW + ITEM_H + GAP;
   grid.style.setProperty('--cw', colW + 'px');
   return c;
@@ -347,7 +283,6 @@ function createRow(){
   const el = document.createElement('div');
   el.className = 'row';
   const row = { el, index: -1, cards: [] };
-  // over-provision cards per row; extras stay display:none. ensureRowCapacity tops up on very wide screens.
   const cap = Math.ceil((sc.clientWidth || 1200) / (MIN_CARD + GAP)) + 4;
   for (let i = 0; i < cap; i++) addCard(row);
   return row;
@@ -421,10 +356,9 @@ function doLayout(){
   if (!cols) return;
   let [st, en, totalRows] = visibleRange();
   spacer.style.height = Math.max(0, totalRows * rowH - GAP) + 'px';
-  // shrinking the spacer can clamp scrollTop; force layout and recompute the range
   void sc.scrollTop;
   [st, en, totalRows] = visibleRange();
-  countTop.textContent = VIEW.length ? VIEW.length + ' games' : '';
+  countTop.textContent = VIEW.length ? VIEW.length + ' titles ' : '';
   emptyBox.style.display = (ALL.length && !VIEW.length) ? 'block' : 'none';
   const need = Math.min(totalRows, Math.max(1, en - st + 1));
   setPoolSize(need);
@@ -459,11 +393,10 @@ new ResizeObserver(() => {
 function buildItems(zones){
   const items = [];
   for (const z of zones){
-    if (z.id < 0) continue;                       // promo entries (discord card etc.)
+    if (z.id < 0) continue;
     const name = z.name || ('Game ' + z.id);
     const author = z.author || '';
     items.push([name, author, z.cover || '', z.url || '', 0, 0, 0, z.featured ? 1 : 0]);
-    //            0      1            2             3        4=letters 5=tint 6=haystack  7=featured
   }
   items.sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase(), undefined, { sensitivity: 'base' }));
   for (const it of items){
@@ -493,7 +426,7 @@ qInput.addEventListener('keydown', e => {
 document.addEventListener('keydown', e => {
   if (playerOpen){
     if (e.key === 'Escape'){
-      if (fsElement()) return;                 // browser exits native fullscreen first
+      if (fsElement()) return;
       if (player.classList.contains('max')){ e.preventDefault(); setMaximized(false); return; }
       e.preventDefault(); closePlayer();
     }
@@ -503,10 +436,6 @@ document.addEventListener('keydown', e => {
   if (e.key === '/' && tag !== 'input' && !e.metaKey && !e.ctrlKey && !e.altKey){ e.preventDefault(); qInput.focus(); }
 });
 
-/* ============================ in-site player ============================ */
-/* jsdelivr serves .html as text/plain, so pointing the iframe at the CDN
-   URL shows source. fetch() the file (CORS is open) and load a text/html
-   blob instead — the pages already have <base href> for their assets. */
 let playerOpen = false;
 let playerBlob = '';
 let playerHtml = '';
@@ -544,8 +473,6 @@ function setMaximized(on){
     setMaxLabel(false);
   }
 }
-/* Maximize inside an embed: close the overlay, open about:blank, write the
-   fetched game HTML into that document (no iframe, no blob: URL). */
 function popOutGame(){
   const html = playerHtml;
   if (!html){ playerWantMax = true; return; }
@@ -662,18 +589,12 @@ async function boot(){
   }catch(err){
     spin.style.display = 'none';
     statusText.outerHTML =
-      '<div class="err"><b>Couldn\'t load the catalog.</b><br>' +
-      'Fetching <code>' + CFG.zonesUrl.replace(/</g,'&lt;') + '</code> failed (' + String(err && err.message || err) + ').<br><br>' +
-      'If you just moved folders, update the matching value in your hosted <code>config.js</code> ' +
-      '(or SITE_DEFAULTS at the top of index.html). If you opened this file directly (file://), ' +
-      'serve the folder over http instead — see the comment block at the top of this file.</div>';
+      '<div class="err">ts broken ill fix it dw</div>';
     return;
   }
   ALL = buildItems(zones);
   VIEW = ALL;
   status.style.display = 'none';
-  document.getElementById('foot').textContent =
-    'Built fast on purpose: only the rows on screen are ever in the page.';
   measure();
   doLayout();
 }
