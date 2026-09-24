@@ -1,0 +1,869 @@
+<!doctype html><html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Gamma</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<style>
+:root{
+  --bg:#000; --bg2:#000;
+  --card:#151923; --card2:#362d40;
+  --line:#000; --line2:#000; --searchLine:#513f65;
+  --text:#e8ebf3; --muted:#8f97ab;
+  --acc:#8f6cff;
+  --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --space:16px;   /* the ONE spacing unit: page gutters, poster gaps, grid edges */
+  --gold:#ffcf5c;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+
+body{display:flex;flex-direction:column;overflow:hidden}
+
+/* ---------- header ---------- */
+header{flex:0 0 auto;display:flex;align-items:center;gap:var(--space);padding:12px var(--space);
+  border-bottom:1px solid var(--line);background:rgba(0,0,0,1)}
+.wordmark{font-size:20px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
+.tabs{display:flex;gap:2px;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:2px}
+.tabs button{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;
+  font-weight:600;padding:5px 12px;border-radius:7px;cursor:pointer;white-space:nowrap}
+.tabs button.on{background:var(--card2);color:var(--text)}
+.tabs button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.head-r{flex:1;display:flex;justify-content:center;min-width:0}
+.searchw{position:relative;width:min(540px,100%)}
+.searchw svg{position:absolute;left:13px;top:50%;translate:0 -50%;opacity:.45;pointer-events:none}
+input#q{width:100%;padding:11px 64px 11px 38px;border-radius:12px;font-size:14.5px;
+  border:1px solid var(--searchLine);background:var(--bg2);color:var(--text);outline:none;
+  transition:border-color .15s, box-shadow .15s}
+input#q::placeholder{color:var(--muted)}
+input#q:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(143,108,255,.16)}
+.kbd-hint{position:absolute;right:11px;top:50%;translate:0 -50%;font-size:10.5px;color:var(--muted);
+  border:1px solid var(--line);border-radius:5px;padding:1px 6px;user-select:none;pointer-events:none}
+
+/* ---------- meta row (filter + count) ---------- */
+.meta-row{display:flex;align-items:center;gap:var(--space);padding:0;white-space:nowrap}
+.count{font-size:12.5px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.seg{display:none;gap:2px;background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:2px}
+body[data-tab="games"] .seg{display:flex}
+.seg button{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;
+  padding:4px 10px;border-radius:7px;cursor:pointer}
+.seg button.on{background:var(--card2);color:var(--text)}
+.seg button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+
+/* ---------- body ---------- */
+#sc{flex:1;min-height:0;position:relative;overflow-y:scroll;overscroll-behavior:contain}
+#grid{position:relative;padding:var(--space);
+  max-width:1720px;margin:0 auto;overflow-anchor:none}
+#spacer{position:relative;width:1px;opacity:0;pointer-events:none}
+.row{position:absolute;top:0;left:var(--space);display:flex;gap:var(--space);will-change:transform}
+
+/* ---------- card ---------- */
+.card{display:block;width:var(--cw);color:inherit;text-decoration:none;user-select:none;cursor:pointer}
+.lic{aspect-ratio:var(--ar,2/3);border-radius:13px;overflow:hidden;background:var(--mbg);
+  position:relative;transition:transform .18s;display:block}
+.lic img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .35s}
+.lic img.on{opacity:1}
+.mono{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:calc(var(--cw)*.30);color:rgba(255,255,255,.30);letter-spacing:.02em;
+  padding:10px;text-align:center;word-break:break-word}
+.meta{padding:8px 2px 0;line-height:1.25}
+.name{display:block;font-size:13.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.author{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.card:hover .lic{transform:translateY(-3px)}
+.card:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:13px}
+.card .lic{content-visibility:auto}
+
+/* ---------- empty / status ---------- */
+.empty{display:none;padding:88px 0 40px;text-align:center;color:var(--muted)}
+.empty .big{font-size:17px;font-weight:650;color:var(--text)}
+.empty .small{font-size:13px;margin-top:6px}
+#status{position:absolute;left:0;right:0;top:0;height:62vh;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:12px;color:var(--muted);font-size:14px;padding:0 22px;text-align:center}
+#status code{color:var(--acc);font-size:12px;background:var(--bg2);border:1px solid var(--line);
+  padding:2px 8px;border-radius:7px}
+.spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--searchLine);
+  border-top-color:var(--acc);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.err{color:#f0a0a8;font-size:14px;max-width:560px;line-height:1.55}
+.err code{font-size:12px}
+
+/* ---------- season picker ---------- */
+#modal{position:fixed;inset:0;display:none;z-index:40;background:rgba(0,0,0,.66);
+  align-items:center;justify-content:center;padding:var(--space)}
+#modal.open{display:flex}
+.sheet{width:min(430px,100%);border-radius:14px;padding:var(--space);
+  background:#14121b;max-height:82vh;overflow-y:auto}
+.sheet h3{margin:0 0 4px;font-size:17px;font-weight:750;letter-spacing:-.01em}
+.sheet .sub{font-size:12px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em}
+.slist{display:flex;flex-direction:column;gap:6px}
+.sbtn{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 12px;border-radius:10px;text-decoration:none;color:var(--text);
+  font-size:14px;font-weight:600;border:1px solid #27222f;background:#1a1622}
+.sbtn:hover{border-color:var(--acc)}
+.sbtn .arrow{color:var(--muted);font-size:12px}
+.sclose{margin-top:12px;width:100%;appearance:none;border:1px solid #27222f;background:transparent;
+  color:var(--muted);font:inherit;font-size:13px;padding:8px;border-radius:10px;cursor:pointer}
+.sclose:hover{color:var(--text);border-color:var(--searchLine)}
+
+/* ---------- in-site game player ---------- */
+#player{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
+  background:rgba(6,8,12,.62);padding:0}
+#player.on{display:flex}
+#player.max{background:#000}
+.player-stage{position:relative;width:85vw;height:85vh;max-width:85vw;max-height:85vh;
+  border-radius:13px;overflow:hidden;background:#000;border:1px solid var(--line);
+  box-shadow:0 28px 80px rgba(0,0,0,.55)}
+#player.max .player-stage{width:100vw;height:100vh;max-width:none;max-height:none;
+  border-radius:0;border:0;box-shadow:none}
+.player-stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;display:block}
+.player-btns{position:absolute;top:10px;right:10px;z-index:2;display:flex;gap:6px;pointer-events:none}
+.player-btns button{pointer-events:auto;appearance:none;width:32px;height:32px;padding:0;border-radius:8px;
+  border:1px solid rgba(255,255,255,.14);background:rgba(12,14,18,.48);color:#e8ebf3;
+  display:grid;place-items:center;cursor:pointer;opacity:.7;backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);transition:opacity .15s,background .15s,border-color .15s;
+  touch-action:manipulation;user-select:none}
+.player-btns button:hover,.player-btns button:focus-visible{opacity:1;background:rgba(12,14,18,.82);
+  border-color:rgba(255,255,255,.28);outline:none}
+.player-btns button:focus-visible{box-shadow:0 0 0 2px var var(--acc)}
+.player-btns svg{display:block}
+#player.max .i-max,#player:not(.max) .i-rest{display:none}
+#player.max .player-btns{display:none}
+.player-load{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  background:rgba(8,10,14,.55);pointer-events:none;z-index:1;flex-direction:column;gap:12px}
+.player-load.on{display:flex}
+
+/* ---------- responsive ---------- */
+@media (max-width:760px){
+  :root{--space:12px}
+  .wordmark{display:none}
+  header{gap:10px;padding:11px 12px}
+  .kbd-hint{display:none}
+  .meta-row .count{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .lic,.lic img{transition:none}
+  .spin{animation-duration:.001s}
+  .player-btns button{transition:none}
+}
+</style>
+
+<script>
+/* ---- catalog sources & branding. The remote config.js overrides these
+   when it loads; edit SITE_DEFAULTS for the simple case. Keys used:
+   zonesUrl / htmlBase / coversBase (games), moviesUrls (movies),
+   tvUrls (series), postersBase (relative poster paths). ---- */
+window.SITE_DEFAULTS = {
+  title:      "Gamma",
+  zonesUrl:   "https://cdn.jsdelivr.net/gh/1ts-Alec/assets@main/zones.json",
+  htmlBase:   "https://cdn.jsdelivr.net/gh/1ts-Alec/html@main",
+  coversBase: "https://cdn.jsdelivr.net/gh/1ts-Alec/covers@main",
+  moviesUrls: [
+    "movies.json",
+    "https://cdn.jsdelivr.net/gh/1ts-Alec/gamma-network@main/movies.json"
+  ],
+  tvUrls: [
+    "tv.json",
+    "https://cdn.jsdelivr.net/gh/1ts-Alec/gamma-network@main/tv.json"
+  ]
+};
+</script>
+<script src="https://cdn.jsdelivr.net/gh/1ts-Alec/site-config@main/config.js" onerror="window.__cfgMiss=true"></script>
+</head>
+<body data-tab="games">
+
+<noscript><div style="padding:40px;font-family:sans-serif">How th you even use the interweb w no js dawg xDDD</div></noscript>
+
+<header>
+  <div class="wordmark"><span class="long" id="wordmark">Gamma</span></div>
+  <nav class="tabs" id="tabs" aria-label="Sections">
+    <button type="button" class="on" data-tab="games">Games</button>
+    <button type="button" data-tab="movies">Movies</button>
+    <button type="button" data-tab="series">Series</button>
+  </nav>
+  <div class="head-r">
+    <div class="searchw">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa3b5" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search…" autocomplete="off" spellcheck="false" enterkeyhint="search" autofocus>
+      <span class="kbd-hint">/</span>
+    </div>
+  </div>
+  <div class="meta-row">
+    <div class="seg" id="seg">
+      <button type="button" class="on" data-f="0">All</button><button type="button" data-f="1">Featured</button>
+    </div>
+    <span class="count" id="countTop"></span>
+  </div>
+</header>
+
+<main id="sc" tabindex="-1">
+  <div id="grid">
+    <div id="spacer"></div>
+    <div id="status"><div class="spin" id="spin"></div><div id="statusText">Loading game list…</div></div>
+    <div class="empty" id="empty">
+      <div class="big">No matches</div>
+      <div class="small">Try a different spelling — searching names, authors, titles and years.</div>
+    </div>
+  </div>
+</main>
+
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="sheet">
+    <h3 id="mTitle"></h3>
+    <div class="sub" id="mSub"></div>
+    <div class="slist" id="mList"></div>
+    <button type="button" class="sclose" id="mClose">Close</button>
+  </div>
+</div>
+
+<div id="player" role="dialog" aria-modal="true" aria-label="Game player" hidden>
+  <div class="player-stage" id="playerStage">
+    <iframe id="playerFrame" title="Game" allowfullscreen
+      allow="autoplay; fullscreen; gamepad; keyboard-map; pointer-lock; clipboard-read; clipboard-write; accelerometer; gyroscope; xr-spatial-tracking"></iframe>
+    <div class="player-load" id="playerLoad">
+      <div class="spin" id="playerSpin"></div>
+      <div class="err" id="playerErr" hidden></div>
+    </div>
+    <div class="player-btns">
+      <button type="button" id="playerMax" title="Maximize" aria-label="Maximize">
+        <svg class="i-max" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        <svg class="i-rest" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/></svg>
+      </button>
+      <button type="button" id="playerClose" title="Close" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ==================================================================
+   One page, three sections (games / movies / series), one shared
+   virtualized grid engine. Switching tabs only swaps section state
+   (data, filter, query, scroll) — no reloads, no other files needed.
+   ================================================================== */
+
+/* ============================ config ============================ */
+const CFG = Object.assign({}, window.SITE_DEFAULTS || {}, window.SITE_CONFIG || {});
+document.title = CFG.title || 'Gamma';
+document.getElementById('wordmark').textContent = CFG.title || 'Gamma';
+
+const clean = s => String(s || '').replace(/\/+$/, '');
+const hrefFor = u => !u ? '#' : u.replace('{HTML_URL}', clean(CFG.htmlBase));
+const coverFor = u => !u ? ''  : u.replace('{COVER_URL}', clean(CFG.coversBase));
+const posterFor = u => !u ? '' :
+  (/^https?:\/\//.test(u) ? u : clean(CFG.postersBase || '') + '/' + String(u).replace(/^\/+/, ''));
+
+/* ============================ dom refs ============================ */
+const sc     = document.getElementById('sc');
+const grid   = document.getElementById('grid');
+const spacer = document.getElementById('spacer');
+const status = document.getElementById('status');
+const spin   = document.getElementById('spin');
+const statusText = document.getElementById('statusText');
+const emptyBox = document.getElementById('empty');
+const countTop = document.getElementById('countTop');
+const qInput = document.getElementById('q');
+const seg    = document.getElementById('seg');
+const tabs   = document.getElementById('tabs');
+const modal  = document.getElementById('modal');
+const mTitle = document.getElementById('mTitle');
+const mSub   = document.getElementById('mSub');
+const mList  = document.getElementById('mList');
+const player      = document.getElementById('player');
+const playerStage = document.getElementById('playerStage');
+const playerFrame = document.getElementById('playerFrame');
+const playerLoad  = document.getElementById('playerLoad');
+const playerMax   = document.getElementById('playerMax');
+const playerClose = document.getElementById('playerClose');
+
+/* ============================ shared helpers ============================ */
+function lettersOf(name){
+  const w = String(name || '?').replace(/^\W+/, '');
+  const parts = w.split(/\s+/).filter(Boolean);
+  return ((parts[0] || '?')[0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+function tintOf(name){
+  let h = 0; const s = String(name || '');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return 'hsl(' + (h % 360) + ' 30% 18%)';
+}
+
+/* ============================ sections ============================ */
+/* Each section: aspect (card height multiplier), itemH (caption block px),
+   sources (ordered fetch list), build(items) -> uniform item objects,
+   countWord, placeholder, and per-section UI state. */
+const SECTIONS = {
+  games: {
+    aspect: 1, itemH: 56,
+    sources: () => [CFG.zonesUrl],
+    countWord: 'titles',
+    placeholder: 'Search…',
+    errText: 'ts broken ill fix it dw',
+    query: '', featOnly: false, scrollTop: 0,
+    loaded: false, ALL: [], VIEW: [],
+    onCard(rec, e){
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const url = rec.el.href;
+      if (!url || url === location.href || url.endsWith('#')) return;
+      e.preventDefault();
+      openPlayer(url, rec.nm.textContent || 'Game');
+    },
+    build(zones){
+      const items = [];
+      for (const z of zones){
+        if (z.id < 0) continue;                       // promo entries (discord card etc.)
+        const name = z.name || ('Game ' + z.id);
+        items.push(this.finish({
+          name, sub: z.author || '',
+          poster: coverFor(z.cover || ''),
+          href: hrefFor(z.url || ''),
+          featured: z.featured ? true : false,
+          haystack: (name + '\n' + (z.author || '')).toLowerCase()
+        }));
+      }
+      return items;
+    }
+  },
+  movies: {
+    aspect: 1.5, itemH: 40,
+    sources: () => (CFG.moviesUrls && CFG.moviesUrls.length ? CFG.moviesUrls : ['movies.json']),
+    countWord: 'titles',
+    placeholder: 'Search movies…',
+    errText: 'ts broken ill fix it dw',
+    query: '', featOnly: false, scrollTop: 0,
+    loaded: false, ALL: [], VIEW: [],
+    onCard(rec, e){
+      /* plain new-tab link; let the anchor do it */
+    },
+    build(movies){
+      const items = [];
+      for (const m of movies){
+        if (!m || !m.url) continue;
+        const name = m.title || 'Untitled';
+        const year = m.year ? String(m.year) : '';
+        items.push(this.finish({
+          name, sub: year,
+          poster: posterFor(m.poster),
+          href: m.url, target: '_blank',
+          haystack: (name + '\n' + year).toLowerCase()
+        }));
+      }
+      return items;
+    }
+  },
+  series: {
+    aspect: 1.5, itemH: 40,
+    sources: () => (CFG.tvUrls && CFG.tvUrls.length ? CFG.tvUrls : ['tv.json']),
+    countWord: 'shows',
+    placeholder: 'Search shows…',
+    errText: "Couldn't load the show list — check <code>tv.json</code> / <code>tvUrls</code> sources.",
+    query: '', featOnly: false, scrollTop: 0,
+    loaded: false, ALL: [], VIEW: [],
+    onCard(rec, e){
+      if (rec.item.seasons){
+        e.preventDefault();
+        openSeasons(rec.item);
+      }
+      /* else: plain new-tab link */
+    },
+    build(shows){
+      const items = [];
+      for (const m of shows){
+        if (!m) continue;
+        const seasons = Array.isArray(m.seasons)
+          ? m.seasons.filter(s => s && s.url).map((s, i) => [s.part || ('Season ' + (i + 1)), s.url])
+          : null;
+        const direct = m.url || null;
+        if (!direct && !(seasons && seasons.length)) continue;   // nothing to open
+        const name = m.title || 'Untitled';
+        let sub = '';
+        if (m.year) sub = String(m.year);
+        else if (seasons && seasons.length > 1) sub = seasons.length + ' seasons';
+        else if (seasons && seasons.length === 1) sub = seasons[0][0];
+        items.push(this.finish({
+          name, sub,
+          poster: posterFor(m.poster),
+          href: seasons ? '#seasons' : direct,
+          target: seasons ? null : '_blank',
+          seasons: seasons || null,
+          haystack: (name + '\n' + sub + '\n' + (seasons ? seasons.map(s => s[0]).join('\n') : '')).toLowerCase()
+        }));
+      }
+      return items;
+    }
+  }
+};
+/* shared post-processing for a section's items */
+function finishItems(sec, items){
+  items.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase(), undefined, { sensitivity: 'base' }));
+  for (const it of items){ it.letters = lettersOf(it.name); it.tint = tintOf(it.name); }
+  return items;
+}
+for (const k of Object.keys(SECTIONS)){
+  const orig = SECTIONS[k].build;
+  SECTIONS[k].finish = it => it;
+  SECTIONS[k].build = function(raw){ return finishItems(this, orig.call(this, raw)); };
+}
+
+/* ============================ virtualized grid ============================ */
+let GAP = 16;
+const MIN_CARD = 150, OVERSCAN = 2;
+let cols = 0, rowH = 0, colW = 0, padTop = 0;
+const pool = [];
+let paintedSt = -1, paintedEn = -1;
+let needRows = 0;
+let curTab = 'games';
+
+function S(){ return SECTIONS[curTab]; }
+
+function measure(){
+  GAP = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--space')) || 16;
+  const cs = getComputedStyle(grid);
+  const padL = parseFloat(cs.paddingLeft) || 16;
+  padTop = parseFloat(cs.paddingTop) || 0;
+  const avail = grid.clientWidth - padL * 2;
+  const c = Math.max(1, Math.floor((avail + GAP) / (MIN_CARD + GAP)));
+  cols = c;
+  colW = (avail - (c - 1) * GAP) / c;
+  rowH = colW * S().aspect + S().itemH + GAP;
+  grid.style.setProperty('--cw', colW + 'px');
+  grid.style.setProperty('--ar', S().aspect === 1 ? '1/1' : '2/3');
+  return c;
+}
+
+function addCard(row){
+  const a = document.createElement('a');
+  a.className = 'card';
+  a.draggable = false;
+  const lic = document.createElement('span');
+  lic.className = 'lic';
+  const mono = document.createElement('span'); mono.className = 'mono';
+  const img = document.createElement('img');
+  img.loading = 'lazy'; img.decoding = 'async'; img.draggable = false; img.alt = '';
+  img.referrerPolicy = 'no-referrer';
+  const meta = document.createElement('span'); meta.className = 'meta';
+  const nm = document.createElement('span'); nm.className = 'name';
+  const sub = document.createElement('span'); sub.className = 'author';
+  meta.append(nm, sub);
+  lic.append(mono, img);
+  a.append(lic, meta);
+  const rec = { el: a, img, mono, nm, sub, lic, item: null, key: '', ok: true };
+  img.addEventListener('load', () => { rec.ok = true; img.classList.add('on'); mono.style.display = 'none'; });
+  img.addEventListener('error', () => { rec.ok = false; img.classList.remove('on'); img.style.display = 'none'; mono.style.display = 'flex'; });
+  row.cards.push(rec);
+  row.el.appendChild(a);
+}
+
+function createRow(){
+  const el = document.createElement('div');
+  el.className = 'row';
+  const row = { el, index: -1, cards: [] };
+  const cap = Math.ceil((sc.clientWidth || 1200) / (MIN_CARD + GAP)) + 4;
+  for (let i = 0; i < cap; i++) addCard(row);
+  return row;
+}
+
+function ensureRowCapacity(){
+  for (const row of pool) while (row.cards.length < cols) addCard(row);
+}
+
+function paintCard(rec, it){
+  const key = curTab + '|' + it.name + '|' + it.href + '|' + (it.seasons ? it.seasons.length : 0);
+  if (rec.key === key && rec.ok) return;
+  rec.key = key;
+  rec.item = it;
+  rec.el.href = it.href;
+  if (it.target){ rec.el.target = it.target; rec.el.rel = 'noopener noreferrer'; }
+  else { rec.el.removeAttribute('target'); rec.el.removeAttribute('rel'); }
+  rec.el.title = it.name;
+  rec.nm.textContent = it.name;
+  const subText = (curTab === 'games' && it.sub) ? 'by ' + it.sub : it.sub;
+  if (rec.sub.textContent !== subText) rec.sub.textContent = subText;
+  rec.mono.textContent = it.letters;
+  rec.lic.style.background = it.tint;
+  if (!it.poster){                            // no poster URL: skip the network
+    rec.img.classList.remove('on');
+    rec.img.removeAttribute('src');
+    rec.img.style.display = 'none';
+    rec.mono.style.display = 'flex';
+    rec.ok = true;
+    return;
+  }
+  const cur = rec.img.getAttribute('src');
+  if (cur !== it.poster || !rec.ok){
+    rec.img.classList.remove('on');
+    rec.img.style.display = '';
+    rec.mono.style.display = 'flex';
+    rec.ok = true;
+    rec.img.src = it.poster;
+  }
+}
+
+function paintRow(row, index){
+  if (row.index === index && row.el.style.display === 'flex') return;
+  row.index = index;
+  row.el.style.display = 'flex';
+  row.el.style.transform = 'translate3d(0,' + (index * rowH + padTop) + 'px,0)';
+  const start = index * cols;
+  for (let i = 0; i < row.cards.length; i++){
+    const rec = row.cards[i];
+    const it = S().VIEW[start + i];
+    if (it && i < cols){ rec.el.style.display = ''; paintCard(rec, it); }
+    else rec.el.style.display = 'none';
+  }
+}
+
+function hideRow(row){ row.index = -1; row.el.style.display = 'none'; }
+
+function setPoolSize(n){
+  n = Math.max(0, n | 0);
+  while (pool.length < n){ const r = createRow(); pool.push(r); grid.appendChild(r.el); }
+  needRows = n;
+}
+
+function ensurePainted(st, en){
+  if (st === paintedSt && en === paintedEn) return;
+  paintedSt = st; paintedEn = en;
+  for (let k = 0; k < pool.length; k++){
+    if (k < needRows && st + k <= en) paintRow(pool[k], st + k);
+    else hideRow(pool[k]);
+  }
+}
+
+function visibleRange(){
+  const totalRows = Math.max(1, Math.ceil(S().VIEW.length / cols));
+  const y = sc.scrollTop, vh = sc.clientHeight;
+  const st = Math.max(0, Math.floor(y / rowH) - OVERSCAN);
+  const en = Math.min(totalRows - 1, Math.ceil((y + vh) / rowH) + OVERSCAN);
+  return [st, en, totalRows];
+}
+
+function doLayout(){
+  if (!cols) return;
+  let [st, en, totalRows] = visibleRange();
+  spacer.style.height = Math.max(0, totalRows * rowH - GAP) + 'px';
+  void sc.scrollTop;
+  [st, en, totalRows] = visibleRange();
+  const sec = S();
+  countTop.textContent = sec.VIEW.length ? sec.VIEW.length + ' ' + sec.countWord + ' ' : '';
+  emptyBox.style.display = (sec.ALL.length && !sec.VIEW.length) ? 'block' : 'none';
+  const need = Math.min(totalRows, Math.max(1, en - st + 1));
+  setPoolSize(need);
+  paintedSt = -1; ensurePainted(st, en);
+}
+
+let rafPend = false;
+function update(){
+  if (rafPend) return;
+  rafPend = true;
+  requestAnimationFrame(() => {
+    rafPend = false;
+    if (!cols || !pool.length) return;
+    const [st, en] = visibleRange();
+    ensurePainted(st, en);
+  });
+}
+sc.addEventListener('scroll', () => update(), { passive: true });
+
+let rsT = 0;
+new ResizeObserver(() => {
+  const old = cols;
+  measure();
+  ensureRowCapacity();
+  if (cols !== old){
+    clearTimeout(rsT);
+    rsT = setTimeout(() => { for (const r of pool) r.index = -1; doLayout(); }, 60);
+  } else update();
+}).observe(grid);
+
+/* ============================ search & filter ============================ */
+function applySearch(){
+  const sec = S();
+  const t = sec.query.trim().toLowerCase();
+  sec.VIEW = sec.ALL.filter(g =>
+    (!sec.featOnly || g.featured) && (!t || g.haystack.includes(t)));
+  for (const r of pool) r.index = -1;
+  doLayout();
+}
+
+let searchT = 0;
+qInput.addEventListener('input', () => {
+  clearTimeout(searchT);
+  searchT = setTimeout(() => { S().query = qInput.value; applySearch(); }, 60);
+});
+qInput.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ qInput.value = ''; S().query = ''; applySearch(); qInput.blur(); }
+});
+seg.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  S().featOnly = b.dataset.f === '1';
+  for (const x of seg.children) x.classList.toggle('on', x === b);
+  applySearch();
+});
+
+document.addEventListener('keydown', e => {
+  if (playerOpen){
+    if (e.key === 'Escape'){
+      if (fsElement()) return;                 // browser exits native fullscreen first
+      if (player.classList.contains('max')){ e.preventDefault(); setMaximized(false); return; }
+      e.preventDefault(); closePlayer();
+    }
+    return;
+  }
+  if (e.key === 'Escape' && modal.classList.contains('open')){ closeSeasons(); return; }
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (e.key === '/' && tag !== 'input' && !e.metaKey && !e.ctrlKey && !e.altKey){ e.preventDefault(); qInput.focus(); }
+});
+
+/* ============================ card clicks ============================ */
+grid.addEventListener('click', e => {
+  const a = e.target.closest('a.card');
+  if (!a || !grid.contains(a)) return;
+  const rec = pool.reduce((f, r) => f || r.cards.find(c => c.el === a), null);
+  if (rec && rec.item) S().onCard(rec, e);
+});
+
+/* ============================ season picker ============================ */
+function openSeasons(g){
+  mTitle.textContent = g.name;
+  mSub.textContent = g.seasons.length === 1 ? '1 season' : g.seasons.length + ' seasons';
+  mList.replaceChildren();
+  for (const [part, url] of g.seasons){
+    const a = document.createElement('a');
+    a.className = 'sbtn';
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    const t = document.createElement('span');
+    t.textContent = part || 'Play';
+    const arrow = document.createElement('span');
+    arrow.className = 'arrow';
+    arrow.textContent = 'watch \u2197';
+    a.append(t, arrow);
+    mList.appendChild(a);
+  }
+  modal.classList.add('open');
+}
+function closeSeasons(){ modal.classList.remove('open'); }
+modal.addEventListener('click', e => { if (e.target === modal) closeSeasons(); });
+document.getElementById('mClose').addEventListener('click', closeSeasons);
+
+/* ============================ in-site game player ============================ */
+/* jsdelivr serves .html as text/plain, so pointing the iframe at the CDN
+   URL shows source. fetch() the file (CORS is open) and load a text/html
+   blob instead — the pages already have <base href> for their assets. */
+let playerOpen = false;
+let playerBlob = '';
+let playerHtml = '';
+let playerAbort = null;
+let playerWantMax = false;
+const playerSpin = document.getElementById('playerSpin');
+const playerErr  = document.getElementById('playerErr');
+
+function isEmbedded(){ try { return window.self !== window.top; } catch (_){ return true; } }
+function fsElement(){ return document.fullscreenElement || document.webkitFullscreenElement || null; }
+function requestFs(el){
+  if (!el) return Promise.reject(new Error('no element'));
+  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+  if (!req) return Promise.reject(new Error('unsupported'));
+  try { return Promise.resolve(req.call(el, { navigationUI: 'hide' })); }
+  catch (err){ return Promise.reject(err); }
+}
+function exitFs(){
+  const exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+  if (fsElement() && exit) Promise.resolve(exit.call(document)).catch(() => {});
+}
+function setMaxLabel(on){
+  playerMax.title = on ? 'Restore' : 'Maximize';
+  playerMax.setAttribute('aria-label', on ? 'Restore' : 'Maximize');
+}
+function setMaximized(on){
+  if (on){
+    player.classList.add('max');
+    setMaxLabel(true);
+    requestFs(document.documentElement).catch(() => {});
+  } else {
+    playerWantMax = false;
+    exitFs();
+    player.classList.remove('max');
+    setMaxLabel(false);
+  }
+}
+/* Maximize inside an embed: close the overlay, open about:blank, write the
+   fetched game HTML into that document (no iframe, no blob: URL). */
+function popOutGame(){
+  const html = playerHtml;
+  if (!html){ playerWantMax = true; return; }
+  closePlayer();
+  const w = window.open('about:blank', '_blank');
+  if (!w) return;
+  try {
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  } catch (_){}
+  try { w.focus(); } catch (_){}
+}
+function revokePlayerBlob(){
+  if (playerBlob){ URL.revokeObjectURL(playerBlob); playerBlob = ''; }
+}
+function resetFrame(){
+  revokePlayerBlob();
+  playerHtml = '';
+  playerFrame.removeAttribute('srcdoc');
+  playerFrame.src = 'about:blank';
+}
+function showPlayerLoad(){
+  playerErr.hidden = true;
+  playerErr.textContent = '';
+  playerSpin.style.display = '';
+  playerLoad.classList.add('on');
+}
+function showPlayerError(msg){
+  playerSpin.style.display = 'none';
+  playerErr.hidden = false;
+  playerErr.textContent = msg;
+  playerLoad.classList.add('on');
+}
+function openPlayer(url, name){
+  if (!url || url === '#') return;
+  playerOpen = true;
+  player.hidden = false;
+  player.classList.add('on');
+  setMaximized(false);
+  player.setAttribute('aria-label', name ? name : 'Game player');
+  playerFrame.title = name || 'Game';
+  showPlayerLoad();
+  resetFrame();
+  if (playerAbort) playerAbort.abort();
+  const ctl = playerAbort = new AbortController();
+  fetch(url, { signal: ctl.signal }).then(res => {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.text();
+  }).then(html => {
+    if (!playerOpen || ctl !== playerAbort) return;
+    playerHtml = html;
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    playerBlob = URL.createObjectURL(blob);
+    playerFrame.src = playerBlob;
+    if (playerWantMax){ playerWantMax = false; popOutGame(); }
+  }).catch(err => {
+    if (err && err.name === 'AbortError') return;
+    if (!playerOpen || ctl !== playerAbort) return;
+    showPlayerError('Couldn\'t load this game (' + (err && err.message || err) + ').');
+  });
+}
+function closePlayer(){
+  if (!playerOpen) return;
+  playerOpen = false;
+  if (playerAbort){ playerAbort.abort(); playerAbort = null; }
+  setMaximized(false);
+  player.classList.remove('on');
+  player.hidden = true;
+  playerLoad.classList.remove('on');
+  resetFrame();
+}
+player.addEventListener('click', e => { if (e.target === player) closePlayer(); });
+playerMax.addEventListener('click', e => {
+  e.stopPropagation();
+  if (isEmbedded()) popOutGame();
+  else setMaximized(!player.classList.contains('max'));
+});
+playerClose.addEventListener('click', e => { e.stopPropagation(); closePlayer(); });
+playerFrame.addEventListener('load', () => {
+  if (!playerOpen) return;
+  const src = playerFrame.getAttribute('src');
+  if (!src || src === 'about:blank') return;
+  playerLoad.classList.remove('on');
+  try { playerFrame.focus({ preventScroll: true }); } catch(_){}
+});
+function onFsChange(){
+  if (!playerOpen) return;
+  const on = !!fsElement();
+  player.classList.toggle('max', on);
+  setMaxLabel(on);
+}
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
+
+/* ============================ tabs ============================ */
+function setTab(tab, first){
+  if (!SECTIONS[tab]) tab = 'games';
+  const prev = S();
+  if (!first && tab === curTab) return;
+  if (!first){ prev.scrollTop = sc.scrollTop; }
+  curTab = tab;
+  document.body.dataset.tab = tab;
+  for (const b of tabs.children) b.classList.toggle('on', b.dataset.tab === tab);
+  qInput.placeholder = S().placeholder;
+  qInput.value = S().query;
+  try { history.replaceState(null, '', '#' + tab); } catch (_){}
+  ensureSection().then(() => {
+    measure();
+    applySearch();
+    sc.scrollTop = S().scrollTop;
+    update();
+  });
+}
+tabs.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (b) setTab(b.dataset.tab);
+});
+/* in-page hash links (e.g. from a future home page) */
+window.addEventListener('hashchange', () => {
+  const h = (location.hash || '').replace('#', '').toLowerCase();
+  if (SECTIONS[h]) setTab(h);
+});
+
+/* ============================ data loading ============================ */
+async function ensureSection(){
+  const sec = S();
+  const myTab = curTab;
+  if (sec.loaded) return;
+  sec.loaded = true;                 // set early; cleared again on failure so a tab switch retries
+  status.style.display = 'flex';
+  statusText.classList.remove('err');
+  statusText.textContent = 'Loading ' + (myTab === 'series' ? 'show' : myTab === 'movies' ? 'movie' : 'game') + ' list…';
+  spin.style.display = '';
+  let raw = null;
+  for (const url of sec.sources()){
+    try{
+      const res = await fetch(url, { cache: 'no-cache' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      raw = await res.json();
+      break;
+    }catch(err){ /* try next source */ }
+  }
+  if (curTab !== myTab){
+    /* switched away mid-load; cache the result for the next visit */
+    if (raw !== null && raw !== undefined) sec.ALL = sec.build(raw);
+    else sec.loaded = false;
+    return;
+  }
+  if (raw === null || raw === undefined){
+    sec.loaded = false;
+    spin.style.display = 'none';
+    statusText.classList.add('err');
+    statusText.innerHTML = sec.errText;
+    return;
+  }
+  sec.ALL = sec.build(raw);
+  sec.VIEW = sec.ALL;
+  status.style.display = 'none';
+  measure();
+  doLayout();
+}
+
+/* ============================ boot ============================ */
+(function boot(){
+  const h = (location.hash || '').replace('#', '').toLowerCase();
+  const tab = SECTIONS[h] ? h : 'games';
+  setTab(tab, true);
+})();
+</script>
+</body>
+</html>
