@@ -1,0 +1,363 @@
+<!doctype html><html lang="en">                                                                                                                 <head>                                                                                                                                          <meta charset="utf-8">                                                                                                                          <meta name="viewport" content="width=device-width, initial-scale=1">                                                                            <meta name="color-scheme" content="dark">                                                                                                       <title>M0V13S</title>                                                                                                                           <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>                                                                             <style>                                                                                                                                         :root{                                                                                                                                            --bg:#000; --bg2:#000;                                                                                                                          --card:#151923; --card2:#362d40;                                                                                                                --line:#000; --line2:#000; --searchLine:#513f65;                                                                                                --text:#e8ebf3; --muted:#8f97ab;                                                                                                                --acc:#000;                                                                                                                                     --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;                                                      --space:16px;   /* the ONE spacing unit: page gutters, poster gaps, grid edges */                                                             }                                                                                                                                               html,body{height:100%}                                                                                                                          body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  -webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+
+body{display:flex;flex-direction:column;overflow:hidden}
+
+/* ---------- header ---------- */
+header{flex:0 0 auto;display:flex;align-items:center;gap:var(--space);padding:12px var(--space);
+  border-bottom:1px solid var(--line);background:rgba(0,0,0,1)}
+.wordmark{font-size:20px;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
+.head-r{flex:1;display:flex;justify-content:center;min-width:0}
+.searchw{position:relative;width:min(540px,100%)}
+.searchw svg{position:absolute;left:13px;top:50%;translate:0 -50%;opacity:.45;pointer-events:none}
+input#q{width:100%;padding:11px 64px 11px 38px;border-radius:12px;font-size:14.5px;
+  border:1px solid var(--searchLine);background:var(--bg2);color:var(--text);outline:none;
+  transition:border-color .15s, box-shadow .15s}
+input#q::placeholder{color:var(--muted)}
+input#q:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(91,140,255,.16)}
+.kbd-hint{position:absolute;right:11px;top:50%;translate:0 -50%;font-size:10.5px;color:var(--muted);
+  border:1px solid var(--line);border-radius:5px;padding:1px 6px;user-select:none;pointer-events:none}
+
+/* ---------- body ---------- */
+#sc{flex:1;min-height:0;position:relative;overflow-y:scroll;overscroll-behavior:contain}
+#grid{position:relative;padding:var(--space);
+  max-width:1720px;margin:0 auto;overflow-anchor:none}
+#spacer{position:relative;width:1px;opacity:0;pointer-events:none}
+.row{position:absolute;top:0;left:var(--space);display:flex;gap:var(--space);will-change:transform}
+
+/* ---------- meta row (count) ---------- */
+.meta-row{display:flex;align-items:center;gap:var(--space);justify-content:space-between;padding:6px 2px 12px;flex-wrap:wrap}
+.count{font-size:12.5px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+
+/* ---------- card (2:3 poster tiles) ---------- */
+.card{display:block;width:var(--cw);color:inherit;text-decoration:none;user-select:none}
+.lic{aspect-ratio:2/3;border-radius:13px;overflow:hidden;position:relative;
+  transition:transform .18s;display:block}
+.lic img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .35s}
+.lic img.on{opacity:1}
+.mono{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:calc(var(--cw)*.30);color:rgba(255,255,255,.30);letter-spacing:.02em;
+  padding:10px;text-align:center;word-break:break-word}
+.meta{padding:6px 2px 0;line-height:1.25}
+.name{display:block;font-size:13.5px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.author{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.card:hover .lic{transform:translateY(-3px);border-color:var(--line2)}
+.card:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:13px}
+.card .lic{content-visibility:auto}
+
+/* ---------- empty / status ---------- */
+.empty{display:none;padding:88px 0 40px;text-align:center;color:var(--muted)}
+.empty .big{font-size:17px;font-weight:650;color:var(--text)}
+.empty .small{font-size:13px;margin-top:6px}
+#status{position:absolute;left:0;right:0;top:0;height:62vh;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:12px;color:var(--muted);font-size:14px;padding:0 22px;text-align:center}
+#status code{color:var(--acc);font-size:12px;background:var(--bg2);border:1px solid var(--line);
+  padding:2px 8px;border-radius:7px}
+.spin{width:26px;height:26px;border-radius:50%;border:3px solid var(--searchLine);
+  border-top-color:var(--acc);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.err{color:#f0a0a8;font-size:14px;max-width:560px;line-height:1.55}
+.err code{font-size:12px}
+
+/* ---------- responsive ---------- */
+@media (max-width:760px){
+  :root{--space:12px}
+  .wordmark span.long{display:none}
+  header{gap:10px;padding:11px 12px}
+  .kbd-hint{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .lic,.lic img{transition:none}
+  .spin{animation-duration:.001s}
+}
+</style>
+<script>
+/* ---- catalog sources & branding. The remote config.js (same file the games
+   index uses) overrides these when it loads; edit SITE_DEFAULTS for the simple case. */
+window.SITE_DEFAULTS_M = {
+  title: "M0V13S",
+  moviesUrls: [
+    "https://cdn.jsdelivr.net/gh/1ts-Alec/gamma-network@main/movies.json"
+  ]
+};
+</script>
+<script src="https://cdn.jsdelivr.net/gh/1ts-Alec/site-config@main/config.js" onerror="window.__cfgMiss=true"></script>
+</head>
+<body>
+
+<noscript><div style="padding:40px;font-family:sans-serif">How th you even use the interweb w no js dawg xDDD</div></noscript>
+
+<header>
+  <div class="wordmark"><span class="long" id="wordmark">M0V13S</span></div>
+  <div class="head-r">
+    <div class="searchw">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa3b5" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Search movies…" autocomplete="off" spellcheck="false" enterkeyhint="search" autofocus>
+      <span class="kbd-hint">/</span>
+    </div>
+  </div>
+  <div class="meta-row" style="padding:0">
+    <span class="count" id="countTop"></span>
+  </div>
+</header>
+
+<main id="sc" tabindex="-1">
+  <div id="grid">
+    <div id="spacer"></div>
+    <div id="status"><div class="spin" id="spin"></div><div id="statusText">Loading movie list…</div></div>
+    <div class="empty" id="empty">
+      <div class="big">No matches</div>
+      <div class="small">Try a different spelling — searching titles and years.</div>
+    </div>
+  </div>
+</main>
+
+<script>
+"use strict";
+/* Config: inline defaults + optional window.SITE_CONFIG from the remote config.js.
+   Keys: title, moviesUrls (ordered list), postersBase (rewrites relative poster paths). */
+const CFG = Object.assign({}, window.SITE_DEFAULTS_M || {}, window.SITE_CONFIG || {});
+document.getElementById('wordmark').textContent = CFG.title;
+document.title = CFG.title;
+const clean = s => String(s || '').replace(/\/+$/, '');
+const posterFor = u => !u ? '' :
+  (/^https?:\/\//.test(u) ? u : clean(CFG.postersBase || '') + '/' + String(u).replace(/^\/+/, ''));
+const MOVIE_SOURCES = CFG.moviesUrls || ['movies.json'];
+
+/* ============================ dom refs ============================ */
+const sc     = document.getElementById('sc');
+const grid   = document.getElementById('grid');
+const spacer = document.getElementById('spacer');
+const status_ = document.getElementById('status');
+const spin   = document.getElementById('spin');
+const statusText = document.getElementById('statusText');
+const emptyBox = document.getElementById('empty');
+const countTop = document.getElementById('countTop');
+const qInput = document.getElementById('q');
+
+/* ============================ virtualized grid ============================ */
+const ITEM_H = 40;
+let GAP = 16;
+const MIN_CARD = 150, OVERSCAN = 2;
+let cols = 0, rowH = 0, colW = 0, padTop = 0;
+let ALL = [];
+let VIEW = [];
+const pool = [];
+let paintedSt = -1, paintedEn = -1;
+let needRows = 0;
+
+function measure(){
+  GAP = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--space')) || 16;
+  const cs = getComputedStyle(grid);
+  const padL = parseFloat(cs.paddingLeft) || 16;
+  padTop = parseFloat(cs.paddingTop) || 0;
+  const avail = grid.clientWidth - padL * 2;
+  const c = Math.max(1, Math.floor((avail + GAP) / (MIN_CARD + GAP)));
+  cols = c;
+  colW = (avail - (c - 1) * GAP) / c;
+  rowH = colW * 1.5 + ITEM_H + GAP; /* 2:3 posters */
+  grid.style.setProperty('--cw', colW + 'px');
+  return c;
+}
+
+function lettersOf(name){
+  const w = String(name || '?').replace(/^\W+/, '');
+  const parts = w.split(/\s+/).filter(Boolean);
+  return ((parts[0] || '?')[0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+
+function addCard(row){                                                                                                                            const a = document.createElement('a');                                                                                                          a.className = 'card';                                                                                                                           a.draggable = false;                                                                                                                            a.target = '_blank';                                                                                                                            a.rel = 'noopener noreferrer';                                                                                                                  const lic = document.createElement('span');                                                                                                     lic.className = 'lic';                                                                                                                          const mono = document.createElement('span'); mono.className = 'mono';                                                                           const img = document.createElement('img');                                                                                                      img.loading = 'lazy'; img.decoding = 'async'; img.draggable = false; img.alt = '';                                                              img.referrerPolicy = 'no-referrer';                                                                                                             const meta = document.createElement('span'); meta.className = 'meta';
+  const nm = document.createElement('span'); nm.className = 'name';
+  const yr = document.createElement('span'); yr.className = 'author';
+  meta.append(nm, yr);
+  lic.append(mono, img);
+  a.append(lic, meta);
+  const rec = { el: a, img, mono, nm, yr, lic, key: '', ok: true };
+  img.addEventListener('load', () => { rec.ok = true; img.classList.add('on'); mono.style.display = 'none'; });
+  img.addEventListener('error', () => { rec.ok = false; img.classList.remove('on'); img.style.display = 'none'; mono.style.display = 'flex'; });
+  row.cards.push(rec);
+  row.el.appendChild(a);
+}
+
+function createRow(){
+  const el = document.createElement('div');
+  el.className = 'row';
+  const row = { el, index: -1, cards: [] };
+  const cap = Math.ceil((sc.clientWidth || 1200) / (MIN_CARD + GAP)) + 4;
+  for (let i = 0; i < cap; i++) addCard(row);
+  return row;
+}
+
+function ensureRowCapacity(){
+  for (const row of pool) while (row.cards.length < cols) addCard(row);
+}
+
+function paintCard(rec, g){
+  const key = g[0] + '|' + g[3];
+  if (rec.key === key && rec.ok) return;
+  rec.key = key;
+  rec.el.href = g[3];
+  rec.el.title = g[0];
+  rec.nm.textContent = g[0];
+  if (rec.yr.textContent !== g[1]) rec.yr.textContent = g[1];
+  rec.mono.textContent = g[4];
+  rec.lic.style.background = g[6];
+  const cur = rec.img.getAttribute('src');
+  if (cur !== g[2] || !rec.ok){
+    rec.img.classList.remove('on');
+    rec.img.style.display = '';
+    rec.mono.style.display = 'flex';
+    rec.ok = true;
+    rec.img.src = g[2];
+  }
+}
+
+function paintRow(row, index){
+  if (row.index === index && row.el.style.display === 'flex') return;
+  row.index = index;
+  row.el.style.display = 'flex';
+  row.el.style.transform = 'translate3d(0,' + (index * rowH + padTop) + 'px,0)';
+  const start = index * cols;
+  for (let i = 0; i < row.cards.length; i++){
+    const rec = row.cards[i];
+    const g = VIEW[start + i];
+    if (g && i < cols){ rec.el.style.display = ''; paintCard(rec, g); }
+    else rec.el.style.display = 'none';
+  }
+}
+
+function hideRow(row){ row.index = -1; row.el.style.display = 'none'; }
+
+function setPoolSize(n){
+  n = Math.max(0, n | 0);
+  while (pool.length < n){ const r = createRow(); pool.push(r); grid.appendChild(r.el); }
+  needRows = n;
+}
+
+function ensurePainted(st, en){
+  if (st === paintedSt && en === paintedEn) return;
+  paintedSt = st; paintedEn = en;
+  for (let k = 0; k < pool.length; k++){
+    if (k < needRows && st + k <= en) paintRow(pool[k], st + k);
+    else hideRow(pool[k]);
+  }
+}
+
+function visibleRange(){
+  const totalRows = Math.max(1, Math.ceil(VIEW.length / cols));
+  const y = sc.scrollTop, vh = sc.clientHeight;
+  const st = Math.max(0, Math.floor(y / rowH) - OVERSCAN);
+  const en = Math.min(totalRows - 1, Math.ceil((y + vh) / rowH) + OVERSCAN);
+  return [st, en, totalRows];
+}
+
+function doLayout(){
+  if (!cols) return;
+  let [st, en, totalRows] = visibleRange();
+  spacer.style.height = Math.max(0, totalRows * rowH - GAP) + 'px';
+  void sc.scrollTop;
+  [st, en, totalRows] = visibleRange();
+  countTop.textContent = VIEW.length ? VIEW.length + ' titles ' : '';
+  emptyBox.style.display = (ALL.length && !VIEW.length) ? 'block' : 'none';
+  const need = Math.min(totalRows, Math.max(1, en - st + 1));
+  setPoolSize(need);
+  paintedSt = -1; ensurePainted(st, en);
+}
+
+let rafPend = false;
+function update(){
+  if (rafPend) return;
+  rafPend = true;
+  requestAnimationFrame(() => {
+    rafPend = false;
+    if (!cols || !pool.length) return;
+    const [st, en] = visibleRange();
+    ensurePainted(st, en);
+  });
+}
+sc.addEventListener('scroll', () => update(), { passive: true });
+
+let rsT = 0;
+new ResizeObserver(() => {
+  const old = cols;
+  measure();
+  ensureRowCapacity();
+  if (cols !== old){
+    clearTimeout(rsT);
+    rsT = setTimeout(() => { for (const r of pool) r.index = -1; doLayout(); }, 60);
+  } else update();
+}).observe(grid);
+
+function tintOf(name){
+  let h = 0; const s = String(name || '');
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return 'hsl(' + (h % 360) + ' 30% 17%)';
+}
+
+/* ============================ data ============================ */
+function buildItems(movies){
+  const items = [];
+  for (const m of movies){
+    if (!m || !m.url) continue;
+    const name = m.title || 'Untitled';
+    const year = m.year ? String(m.year) : '';
+    items.push([name, year, posterFor(m.poster), m.url, 0, 0, 0]);
+  }
+  items.sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase(), undefined, { sensitivity: 'base' }));
+  for (const it of items){
+    it[4] = lettersOf(it[0]);
+    it[5] = (it[0] + '\n' + it[1]).toLowerCase();
+    it[6] = tintOf(it[0]);
+  }
+  return items;
+}
+
+let curQuery = '';
+function applySearch(){
+  const t = curQuery.trim().toLowerCase();
+  VIEW = ALL.filter(g => !t || g[5].includes(t));
+  for (const r of pool) r.index = -1;
+  doLayout();
+}
+
+let searchT = 0;
+qInput.addEventListener('input', () => {
+  clearTimeout(searchT);
+  searchT = setTimeout(() => { curQuery = qInput.value; applySearch(); }, 60);
+});
+qInput.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ qInput.value = ''; curQuery = ''; applySearch(); qInput.blur(); }
+});
+document.addEventListener('keydown', e => {
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (e.key === '/' && tag !== 'input' && !e.metaKey && !e.ctrlKey && !e.altKey){ e.preventDefault(); qInput.focus(); }
+});
+
+/* ============================ boot ============================ */
+async function boot(){
+  measure();
+  status_.style.display = 'flex';
+  let movies = null, lastErr = null;
+  for (const url of MOVIE_SOURCES){
+    try{
+      const res = await fetch(url, { cache: 'no-cache' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      movies = await res.json();
+      break;
+    }catch(err){ lastErr = err; }
+  }
+  if (!Array.isArray(movies)){
+    spin.style.display = 'none';
+    statusText.outerHTML = '<div class="err">ts broken ill fix it dw</div>';
+    return;
+  }
+  ALL = buildItems(movies);
+  VIEW = ALL;
+  status_.style.display = 'none';
+  measure();
+  doLayout();
+}
+boot();
+</script>
+</body>
+</html>
