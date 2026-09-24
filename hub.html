@@ -306,6 +306,7 @@ const SECTIONS = {
     query: '', featOnly: false, scrollTop: 0,
     loaded: false, ALL: [], VIEW: [],
     onCard(rec, e){
+      if (rec.item.external) return;                 // plain new-tab link (e.g. forms)
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const url = rec.el.href;
       if (!url || url === location.href || url.endsWith('#')) return;
@@ -317,10 +318,15 @@ const SECTIONS = {
       for (const z of zones){
         if (z.id < 0) continue;                       // promo entries (discord card etc.)
         const name = z.name || ('Game ' + z.id);
+        const raw = z.url || '';
+        const external = !!raw && !raw.includes('{HTML_URL}');   // e.g. a Google Form → new tab, not the player
         items.push(this.finish({
           name, sub: z.author || '',
           poster: coverFor(z.cover || ''),
-          href: hrefFor(z.url || ''),
+          href: external ? raw : hrefFor(raw),
+          target: external ? '_blank' : null,
+          external: external || null,
+          pinned: z.pinned ? true : false,
           featured: z.featured ? true : false,
           haystack: (name + '\n' + (z.author || '')).toLowerCase()
         }));
@@ -349,6 +355,7 @@ const SECTIONS = {
           name, sub: year,
           poster: posterFor(m.poster),
           href: m.url, target: '_blank',
+          pinned: m.pinned ? true : false,
           haystack: (name + '\n' + year).toLowerCase()
         }));
       }
@@ -390,6 +397,7 @@ const SECTIONS = {
           href: seasons ? '#seasons' : direct,
           target: seasons ? null : '_blank',
           seasons: seasons || null,
+          pinned: m.pinned ? true : false,
           haystack: (name + '\n' + sub + '\n' + (seasons ? seasons.map(s => s[0]).join('\n') : '')).toLowerCase()
         }));
       }
@@ -399,7 +407,10 @@ const SECTIONS = {
 };
 /* shared post-processing for a section's items */
 function finishItems(sec, items){
-  items.sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase(), undefined, { sensitivity: 'base' }));
+  /* pinned entries stay at the very top, then alphabetical */
+  items.sort((a, b) =>
+    ((b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)) ||
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase(), undefined, { sensitivity: 'base' }));
   for (const it of items){ it.letters = lettersOf(it.name); it.tint = tintOf(it.name); }
   return items;
 }
